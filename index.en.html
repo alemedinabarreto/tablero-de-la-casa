@@ -1,0 +1,830 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!--
+  House Chore Board
+  © 2026 Maria Alejandra Medina Barreto
+  Licensed under the MIT License. See LICENSE.
+-->
+<title>House Chore Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column of status cards on phone (tagged from NFC), two-column grid on desktop; action sheet slides up from bottom */
+:root{
+  --bg:#F3FAF9; --surface:#FFFFFF; --ink:#1B2B2A; --muted:#5C7472; --line:#D5EBE8;
+  --accent:#17877E; --accent-ink:#FFFFFF; --accent-soft:#D2F2EE;
+  --pink:#FADCE8; --pink-ink:#7E2A52; --pink-soft:#FDEEF4;
+  --ok:#2F7A4B; --ok-soft:#DDF3E6; --warn:#A8650B; --warn-soft:#FFEBD6; --bad:#B23A4F; --bad-soft:#FBDDE3;
+  --p-ana:#3E7FD0; --p-bea:#D0508C; --p-cami:#C98018;
+  --shadow:0 1px 2px rgba(23,135,126,.06),0 4px 16px rgba(23,135,126,.06);
+  --display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121D1C; --surface:#1A2928; --ink:#E6F4F2; --muted:#9BB5B1; --line:#284040;
+  --accent:#6ED6CA; --accent-ink:#0D201E; --accent-soft:#1D3D3A;
+  --pink:#4A2539; --pink-ink:#F9D3E3; --pink-soft:#2E1C26;
+  --ok:#6CCB8E; --ok-soft:#1B3325; --warn:#E9AC55; --warn-soft:#3A2A12; --bad:#EF8590; --bad-soft:#3D1C22;
+  --p-ana:#5B93E0; --p-bea:#D45E97; --p-cami:#BF8020;
+  --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121D1C; --surface:#1A2928; --ink:#E6F4F2; --muted:#9BB5B1; --line:#284040;
+  --accent:#6ED6CA; --accent-ink:#0D201E; --accent-soft:#1D3D3A;
+  --pink:#4A2539; --pink-ink:#F9D3E3; --pink-soft:#2E1C26;
+  --ok:#6CCB8E; --ok-soft:#1B3325; --warn:#E9AC55; --warn-soft:#3A2A12; --bad:#EF8590; --bad-soft:#3D1C22;
+  --p-ana:#5B93E0; --p-bea:#D45E97; --p-cami:#BF8020;
+  --shadow:none; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:30px;font-weight:700}
+h2{font-size:19px;font-weight:700}
+h3{font-size:16px;font-weight:700}
+.eyebrow{font-size:11.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between}
+.who{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px 6px 8px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:14px}
+.chip[aria-pressed="true"]{border-color:var(--pc);box-shadow:inset 0 0 0 1px var(--pc)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--pc);flex:none}
+.p-Ana{--pc:var(--p-ana)} .p-Bea{--pc:var(--p-bea)} .p-Cami{--pc:var(--p-cami)}
+
+.banner{background:var(--warn-soft);color:var(--ink);border-radius:12px;padding:10px 14px;font-size:14px}
+.banner b{color:var(--warn)}
+
+.today{background:var(--pink);color:var(--pink-ink);border-radius:18px;padding:18px 20px;display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center;justify-content:space-between}
+.today .big{font-family:var(--display);font-size:24px;font-weight:700;line-height:1.15}
+.today .sub{opacity:.85;font-size:14px}
+.today .btn{background:var(--surface);color:var(--accent)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.grid-list{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0;box-shadow:var(--shadow)}
+.card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.card .meta{font-size:13px;color:var(--muted)}
+.pill{flex:none;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.neutral{background:var(--accent-soft);color:var(--accent)}
+.status{font-size:14.5px}
+.status b{font-weight:600}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;padding:9px 14px;font-weight:600;font-size:14px;background:var(--accent-soft);color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.5;cursor:default}
+.minis{display:flex;gap:6px;flex-wrap:wrap}
+.mini{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:3px 9px;border-radius:8px;background:var(--bg)}
+.mini.done{background:var(--ok-soft);color:var(--ok)}
+.bars{display:flex;flex-direction:column;gap:5px}
+.bar{display:grid;grid-template-columns:52px 1fr 22px;gap:8px;align-items:center;font-size:13px}
+.bar i{display:block;height:8px;border-radius:4px;background:var(--pc);min-width:2px}
+
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+form{display:flex;gap:8px;flex-wrap:wrap}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px 11px;min-width:0}
+input[type=text]{flex:1 1 140px}
+input[type=number]{width:100px}
+ul.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ul.list li{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:14px;min-width:0}
+ul.list li:first-child{border-top:0}
+ul.list .grow{flex:1;min-width:0;overflow-wrap:anywhere}
+.x{font-size:12px;color:var(--muted);padding:4px 8px;border-radius:8px}
+.x.arm{background:var(--bad-soft);color:var(--bad)}
+.check{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--line);flex:none;display:grid;place-items:center}
+.check:hover{border-color:var(--accent)}
+.tab[aria-selected="true"]{background:var(--pink);color:var(--pink-ink)}
+.alerta{background:var(--bad-soft);color:var(--ink);border-radius:10px;padding:8px 12px;font-size:13.5px}
+.alerta b{color:var(--bad)}
+.av-resp{background:var(--pink-soft);border-radius:12px;padding:10px 14px;font-size:14px}
+.subs{list-style:none;margin:0;padding:8px 0 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.subs li{display:flex;gap:10px;align-items:center;font-size:14px;min-width:0}
+.subs button.sub{display:flex;gap:10px;align-items:center;text-align:left;padding:5px 0;width:100%;min-width:0}
+.subs .check{display:grid;place-items:center;font-size:13px;font-weight:700}
+.subs .on .check{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.subs .on .lbl{color:var(--muted);text-decoration:line-through}
+.subs .lbl{flex:1;min-width:0;overflow-wrap:anywhere}
+.subs .who-did{font-size:12px;color:var(--muted);display:inline-flex;gap:5px;align-items:center;flex:none}
+.empty{font-size:14px;color:var(--muted);padding:6px 0}
+.bal{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bal div{background:var(--bg);border-radius:10px;padding:8px 10px;font-size:13px}
+.bal strong{display:block;font-family:var(--display);font-size:18px}
+.links code{font-size:12.5px;background:var(--bg);padding:2px 6px;border-radius:6px;overflow-wrap:anywhere}
+
+.sheet-bg{position:fixed;inset:0;background:rgba(10,20,16,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:var(--surface);width:100%;max-width:480px;border-radius:20px 20px 0 0;
+  padding:22px max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));
+  display:flex;flex-direction:column;gap:14px;animation:up .22s ease-out}
+@media (min-width:560px){.sheet-bg{align-items:center}.sheet{border-radius:20px}}
+@keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheet .big{font-family:var(--display);font-size:24px;font-weight:700;line-height:1.2}
+.sheet .btn{padding:14px;font-size:16px}
+.view{display:flex;flex-direction:column;gap:22px}
+.view[hidden]{display:none}
+.sheet input[type=text]{flex:none}
+.sheet{max-height:100%;overflow-y:auto}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;width:max-content;max-width:100%;flex-wrap:wrap}
+.tab{padding:7px 14px;border-radius:9px;font-weight:600;font-size:14px;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+.kpi strong{font-family:var(--display);font-size:28px;font-weight:700;display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.kpi span{font-size:13px;color:var(--muted)}
+.tablewrap{overflow-x:auto}
+table.m{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+table.m th,table.m td{padding:7px 8px;text-align:right;border-top:1px solid var(--line);white-space:nowrap}
+table.m th:first-child,table.m td:first-child{text-align:left}
+table.m thead th{border-top:0;color:var(--muted);font-weight:600;font-size:12px}
+table.m tbody th{font-weight:500}
+.heat{display:inline-block;min-width:32px;padding:2px 7px;border-radius:6px;text-align:center}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--muted);align-items:center}
+.legend span{display:inline-flex;gap:6px;align-items:center}
+.chart{position:relative;overflow-x:auto}
+.chart svg{width:100%;min-width:480px;height:auto;display:block}
+.chart text{fill:var(--muted);font-size:11px;font-family:var(--body)}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .hit{fill:transparent;cursor:default}
+.chart g.wk:hover .hit{fill:var(--accent-soft);opacity:.5}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:6px 9px;border-radius:8px;white-space:nowrap;transform:translate(-50%,calc(-100% - 8px));z-index:5}
+.autoria{font-size:13px;color:var(--muted);margin-top:4px}
+.autoria a{color:var(--accent);font-weight:600;text-decoration:none}
+.autoria a:hover{text-decoration:underline}
+.firma{max-width:980px;margin:28px auto 0;text-align:center;font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.firma a{color:var(--accent)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;z-index:30;max-width:calc(100% - 32px)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Ana · Bea · Cami</div>
+      <h1>House chore board</h1>
+      <div class="autoria">Created by <a href="https://www.linkedin.com/in/alejandramedinab" target="_blank" rel="noopener">linkedin.com/in/alejandramedinab</a> · <a href="index.html" lang="es">Español</a></div>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:6px">I am</div>
+      <div class="who" id="who"></div>
+    </div>
+  </header>
+
+  <div class="banner" id="demo" hidden><b>Demo.</b> Sample data: nothing is saved. To get a real one for your home, use the prompt in the README with Claude.</div>
+  <div class="banner" id="acceso" hidden></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-board" data-view="board" aria-selected="true">Board</button>
+    <button class="tab" role="tab" id="tab-stats" data-view="stats" aria-selected="false">Metrics</button>
+  </div>
+
+  <div id="viewStats" class="view" hidden>
+    <div class="row" style="justify-content:space-between">
+      <h2>House metrics</h2>
+      <div class="tabs" id="periodos"></div>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <section class="card">
+      <div class="card-top"><div><h3>Activity by week</h3><div class="meta">Logged tasks, last 8 weeks</div></div><div class="legend" id="weekLegend"></div></div>
+      <div class="chart" id="weekChart"></div>
+    </section>
+    <div class="two">
+      <section class="card"><div><h3>Who does what</h3><div class="meta">Times each person did each task in the period</div></div><div class="tablewrap" id="heat"></div></section>
+      <section class="card"><div><h3>Turns</h3><div class="meta">Trash, sweeping, furniture and towels</div></div><div class="tablewrap" id="turnosTbl"></div></section>
+      <section class="card"><div><h3>Visits in the period</h3><div class="meta">By host: how many visits, nights and what kind</div></div><div class="tablewrap" id="visTbl"></div><div class="tablewrap" id="visTipoTbl"></div></section>
+    </div>
+  </div>
+
+  <div id="viewBoard" class="view">
+  <div id="alertas" style="display:flex;flex-direction:column;gap:8px"></div>
+  <section class="today" id="today"></section>
+
+  <section>
+    <div class="row" style="justify-content:space-between;margin-bottom:10px"><h2>Turns and cleaning</h2><span class="muted" style="font-size:13px" id="week"></span></div>
+    <div class="grid" id="tasks"></div>
+    <div class="eyebrow" style="margin:18px 0 10px">With checklists · sweeping and furniture go together, by turns</div>
+    <div class="grid grid-list" id="tasksList"></div>
+  </section>
+
+  <section class="two">
+    <div class="card">
+      <div class="card-top"><div><h3>Ran out of</h3><div class="meta">The shopping list. Tick it off when you buy it.</div></div><span class="pill neutral" id="faltanCount"></span></div>
+      <form id="faltanForm"><input type="text" id="faltanInput" placeholder="Paper towels, trash bags…" aria-label="What ran out" maxlength="60"><button class="btn primary" type="submit">Add</button></form>
+      <ul class="list" id="faltanList"></ul>
+    </div>
+  </section>
+
+  <section class="card" id="avCard">
+    <div class="card-top"><div><h3>Maintenance</h3><div class="meta">If something breaks, report it here. Handling it rotates between the three of you, so it never always falls on the same person.</div></div><span class="pill neutral" id="avCount"></span></div>
+    <div class="av-resp" id="avResp"></div>
+    <div class="row"><button class="btn primary" data-averia="1">Report something broken</button></div>
+    <ul class="list" id="avList"></ul>
+  </section>
+
+  <section class="card" id="visitasCard">
+    <div class="card-top"><div><h3>Visits</h3><div class="meta">Post who is coming, when, and whether they stay over. That way the group is told.</div></div><span class="pill neutral" id="visCount"></span></div>
+    <div id="visAviso"></div>
+    <div class="row"><button class="btn primary" data-visita="1">Announce a visit</button></div>
+    <div class="eyebrow" style="margin-top:4px">Here now and upcoming</div>
+    <ul class="list" id="visAct"></ul>
+    <div class="eyebrow" style="margin-top:4px">Recent</div>
+    <ul class="list" id="visPas"></ul>
+  </section>
+
+  <section class="card">
+    <h3>History</h3>
+    <ul class="list" id="hist"></ul>
+  </section>
+
+  <section class="card links">
+    <h3>Links for the NFC tags</h3>
+    <div class="meta">Write each link onto its tag. Tapping the tag with an iPhone opens that action directly.</div>
+    <ul class="list" id="links"></ul>
+  </section>
+  </div>
+</div>
+
+<footer class="firma">© 2026 <a href="https://www.linkedin.com/in/alejandramedinab" target="_blank" rel="noopener">linkedin.com/in/alejandramedinab</a> · MIT License</footer>
+<div id="sheetRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+const MSG_LEER="<b>The house records can't be loaded.</b> Open this link while signed in to Claude. If you already are, ask whoever created the board to invite you as an editor from its Share menu.";
+const MSG_ESCRIBIR="<b>You can see the board, but what you mark is not saved.</b> Ask whoever created the board to invite you as an editor from its Share menu.";
+function avisoAcceso(m){const b=document.getElementById("acceso");if(b){b.innerHTML=m;b.hidden=false}}
+const BASE_URL = location.href.split("#")[0];
+const GENTE = ["Ana","Bea","Cami"];
+const DIAS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const TAREAS = {
+  basura:{t:"Take out trash and recycling",corto:"took out the trash",tipo:"turno"},
+  barrer:{t:"Sweep common area",corto:"swept the common area",tipo:"turno",cada:4,tol:0},
+  fiesta:{t:"Party or event at home",corto:"is hosting a party",tipo:"fiesta"},
+  trapos:{t:"Wash kitchen towels and mats",corto:"washed towels and mats",tipo:"turno",cada:15},
+  muebles:{t:"Wipe furniture",corto:"wiped the furniture",tipo:"turno",cada:4,tol:0},
+  lista:{t:"Make the shopping list",corto:"made the list",tipo:"semanal"},
+  nevera:{t:"My fridge shelf",corto:"cleaned her shelf",tipo:"cada"},
+  lavavajillas:{t:"Empty dishwasher or dish rack",corto:"emptied the dishwasher",tipo:"cuenta"},
+  didis:{t:"Cleaning service",corto:"logged the cleaning service visit",tipo:"desde"},
+};
+// Fixed days (Mon, Wed, Sat). Furniture is offset so nobody does both on the same day.
+const FIJOS = {barrer:{2:"Ana",4:"Bea",6:"Cami"}};
+FIJOS.muebles = FIJOS.barrer; // whoever sweeps also wipes the furniture
+const turnoKey = t => t==="muebles" ? "barrer" : t; // turn swaps for sweeping apply to both
+const ABR = {2:"Tue",4:"Thu",6:"Sat"};
+const ORDEN = ["basura","trapos","lavavajillas","lista","nevera","fiesta","barrer","muebles","didis"];
+const EN_LISTA = t => !!SUBS[t] || t==="didis";
+
+let db=null, demo=false, me=null;
+let registros=[], faltan=[], visitas=[], averias=[], didisProx=null;
+// Next cleaning-service visit: a single document didis/proxima {llamadas, llamo, fecha, horario, supervisa}
+function didisVigente(){const p=didisProx,u=logsDe("didis")[0];return p&&p.fecha&&!(u&&u.ts>=p.fecha-12*36e5)?p:null}
+function didisHtml(){const p=didisVigente();
+  if(!p) return `<div class="meta">Next visit: not scheduled.</div>`;
+  const llam=p.llamadas?`Called ✓${GENTE.includes(p.llamo)?` by ${p.llamo}`:""}`:`<b style="color:var(--warn)">Not called yet</b>`;
+  return `<div class="av-resp"><b>Next visit: ${fcorta(p.fecha)}${p.horario?` · ${esc(p.horario)}`:""}</b><br>Supervising: ${GENTE.includes(p.supervisa)?`${pdot(p.supervisa)} ${p.supervisa}`:"nobody yet"}<br>${llam}</div>`}
+function openLimpieza(){
+  if(!me){toast("Pick your name at the top first");return}
+  const p=didisVigente()||{}, f=p.fecha?new Date(p.fecha):null;
+  const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  const [de,a]=(p.horario||"10:00–13:00").split("–");
+  $("#sheetRoot").innerHTML=`<div class="sheet-bg" data-close><form class="sheet" id="didisForm" role="dialog" aria-modal="true" aria-label="Schedule the cleaning service" style="flex-wrap:nowrap">
+    <div class="eyebrow">Cleaning service · next visit</div>
+    <div class="big">Schedule a visit</div>
+    <label class="row" for="dLlam" style="justify-content:space-between"><span class="muted">We already called them</span><input type="checkbox" id="dLlam" ${p.llamadas?"checked":""}></label>
+    <div class="row"><label class="muted" for="dFecha" style="flex:1">What day are they coming?</label><input type="date" id="dFecha" value="${f?iso(f):""}" required></div>
+    <div class="row"><span class="muted" style="flex:1">Time</span><input type="time" id="dDe" value="${de||"10:00"}" aria-label="From"><span class="muted">to</span><input type="time" id="dA" value="${a||"13:00"}" aria-label="Until"></div>
+    <div class="row"><label class="muted" for="dSup" style="flex:1">Who supervises them?</label><select id="dSup"><option value="">Nobody yet</option>${GENTE.map(g=>`<option ${p.supervisa===g?"selected":""}>${g}</option>`).join("")}</select></div>
+    <button class="btn primary" type="submit">Save</button>
+    ${p.fecha?`<button class="btn" type="button" data-didisdel="1">Remove the appointment</button>`:""}
+    <button class="btn" type="button" data-close>Cancel</button></form></div>`;
+  $("#didisForm").addEventListener("submit",async ev=>{ev.preventDefault();
+    const [y,m,d]=($("#dFecha").value||"").split("-").map(Number); if(!y){toast("Pick the day");return}
+    const [hh,mm]=($("#dDe").value||"10:00").split(":").map(Number);
+    const llam=$("#dLlam").checked;
+    const rec={llamadas:llam,llamo:llam?(p.llamadas&&p.llamo?p.llamo:me):"",fecha:new Date(y,m-1,d,hh||0,mm||0).getTime(),horario:`${$("#dDe").value||""}–${$("#dA").value||""}`,supervisa:$("#dSup").value,quien:me,ts:Date.now()};
+    closeSheet();
+    if(demo){didisProx=rec;render();toast("Visit scheduled");return}
+    try{await db.collection("didis").doc("proxima").set(rec);toast("Visit scheduled ✓")}catch(err){if(err&&err.code==="invalid_argument")avisoAcceso(MSG_ESCRIBIR);toast("Couldn't save the appointment.")}});
+}
+async function quitarLimpieza(){closeSheet();
+  if(demo){didisProx=null;render();return}
+  try{await db.collection("didis").doc("proxima").set({fecha:null,quien:me||"",ts:Date.now()});toast("Appointment removed")}catch(_){toast("Couldn't remove the appointment.")}}
+const LUGARES=["Kitchen","Bathroom","Living room","Dining room","Hallway","Bedroom","Other"];
+const AV_EST={pendiente:["bad","Pending"],avisado:["warn","Landlord notified"],arreglado:["ok","Fixed"]};
+const GENEROS=["Woman","Man","Other"];
+const TIPOS=["Friend","Partner","Family","Hookup","Just met","Other"];
+const LIMITE_NOCHES=4; // nights in 30 days from the same guest before suggesting a group talk
+let armed=null;
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sod=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x};
+const lunes=d=>{const x=sod(d);const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return x};
+const diasEntre=(a,b)=>Math.round((sod(b)-sod(a))/864e5);
+const eur=n=>n.toLocaleString("en-GB",{style:"currency",currency:"EUR"});
+function hace(ts){const d=diasEntre(ts,Date.now());const h=new Date(ts).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+  if(d===0)return "today "+h; if(d===1)return "yesterday "+h; if(d<7)return DIAS[new Date(ts).getDay()]+" "+h; return new Date(ts).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}
+const pdot=p=>`<span class="dot p-${p}"></span>`;
+
+try{me=localStorage.getItem("casa-yo")}catch(e){}
+if(!GENTE.includes(me))me=null;
+
+function logsDe(t){return registros.filter(r=>r.tarea===t)}
+function ultimo(t){return logsDe(t)[0]}
+
+// From 2 Nov: if someone does another's day, that person owes a turn and does the next day of whoever covered.
+const CUT_FIJO=1793574000000;
+const sinDobles=arr=>{const out=[];let last=null;for(const r of arr){if(last&&last.quien===r.quien&&r.ts-last.ts<30*60000)continue;last=r;out.push(r)}return out};
+function replayFijo(t){
+  const key=turnoKey(t), M=FIJOS[key], D=864e5;
+  const done=sinDobles(registros.filter(r=>r.tarea===key&&GENTE.includes(r.quien)).sort((a,b)=>a.ts-b.ts));
+  const ovs=registros.filter(r=>r.tarea==="turno-"+key&&r.slot&&GENTE.includes(r.asigna));
+  // A "reinicio-barrer" record resets debts and streaks from that moment.
+  const cut=Math.max(CUT_FIJO,...registros.filter(r=>r.tarea==="reinicio-"+key).map(r=>r.ts));
+  const seeds=registros.filter(r=>r.tarea==="deuda-"+key&&r.ts>cut&&GENTE.includes(r.debe)&&GENTE.includes(r.a)).sort((a,b)=>a.ts-b.ts);
+  const debt={};GENTE.forEach(a=>{debt[a]={};GENTE.forEach(b=>debt[a][b]=0)});
+  const racha={Ana:0,Bea:0,Cami:0}, por={Ana:[],Bea:[],Cami:[]};
+  const d0=sod(cut); while(!M[d0.getDay()]) d0.setDate(d0.getDate()-1);
+  const today=sod(new Date()).getTime(), slots=[];
+  for(const x=new Date(d0); x.getTime()<=today+8*D; x.setDate(x.getDate()+1)) if(M[x.getDay()]) slots.push(sod(x));
+  const out=[]; let si=0;
+  for(let i=0;i<slots.length;i++){
+    const sd=slots[i], st=sd.getTime(), en=i+1<slots.length?slots[i+1].getTime():st+7*D;
+    while(si<seeds.length&&seeds[si].ts<=st){debt[seeds[si].debe][seeds[si].a]++;si++}
+    const base=M[sd.getDay()], ov=ovs.find(r=>r.slot===st);
+    let who=base, settle=null;
+    if(ov) who=ov.asigna; else {const Y=GENTE.find(y=>y!==base&&debt[y][base]>0); if(Y){who=Y;settle=Y}}
+    out.push({date:sd,who,base,settle,ov});
+    if(st>today) continue;
+    const dn=done.find(r=>r.ts>=st&&r.ts<en); if(!dn) continue;
+    if(dn.quien===who){racha[who]=0;por[who]=[];
+      if(settle) debt[settle][base]--; else if(who!==base){if(debt[who][base]>0)debt[who][base]--;else debt[base][who]++}}
+    else{ if(debt[dn.quien][who]>0) debt[dn.quien][who]--; else debt[who][dn.quien]++;
+      if(!(ov&&ov.quien===who)){racha[who]++;por[who].push(dn.quien)} }
+  }
+  while(si<seeds.length){debt[seeds[si].debe][seeds[si].a]++;si++}
+  return {slots:out,debt,racha,por};
+}
+function diaFijo(t,now,dir){const R=replayFijo(t), n=sod(now).getTime();
+  if(dir<0){const c=R.slots.filter(x=>x.date.getTime()<=n);return c[c.length-1]}
+  return R.slots.find(x=>x.date.getTime()>n)}
+const SUBS={
+  barrer:[["pasillo","Hallway"],["cocina","Kitchen"],["comedor","Dining room"],["sala","Living room"]],
+  muebles:[["barra","Kitchen counter and dish area"],["micro","Microwave and oven doors"],["mesas","Tables: dining, the 2 wooden ones and the glass ones"],["blanco","White cabinet"],["despacho","Study cabinet"]],
+};
+let subs={};
+const subId=(t,slot)=>`${t}-${slot}`;
+const ronda=t=>{const u=ultimo(t);return u?u.ts:0};
+function subsHtml(t,s){const L=SUBS[t]; if(!L)return "";
+  const slot=ronda(t), d=subs[subId(t,slot)]||{};
+  const n=L.filter(([k])=>d[k]).length;
+  return `<div class="meta">Checklist for this turn · ${n} of ${L.length}</div><ul class="subs">${L.map(([k,l])=>{const x=d[k];
+    return `<li><button class="sub ${x?"on":""}" data-sub="${t}|${slot}|${k}" aria-pressed="${!!x}"><span class="check">${x?"✓":""}</span><span class="lbl">${esc(l)}</span>${x&&GENTE.includes(x.quien)?`<span class="who-did">${pdot(x.quien)}${x.quien}</span>`:""}</button></li>`}).join("")}</ul>`}
+async function toggleSub(t,slot,k){
+  if(!me){toast("Pick your name at the top first");return}
+  const id=subId(t,slot), cur={...(subs[id]||{})};
+  if(cur[k]) delete cur[k]; else cur[k]={quien:me,ts:Date.now()};
+  subs[id]=cur; render();
+  const todas=SUBS[t].every(([kk])=>cur[kk]);
+  const s=estadoTurno(t);
+  if(!demo){try{await db.collection("subtareas").doc(id).set({...cur,ts:Number(slot)})}catch(e){if(e&&e.code==="invalid_argument")avisoAcceso(MSG_ESCRIBIR);toast("Couldn't save the checklist item.");return}}
+  if(todas&&ronda(t)===Number(slot)){
+    const rec={tarea:t,quien:me,turno:s.toca,ts:Date.now()}; if(s.toca!==me) rec.cubre=s.toca;
+    if(demo){registros.unshift({id:"d"+Date.now(),...rec});render();toast("All done. Task complete ✓");return}
+    try{await db.collection("registros").add(rec);toast("All done. Task complete ✓")}catch(_){toast("Couldn't mark the task as done.")}
+  }
+}
+function _estadoFijo(t){
+  const now=new Date(), lt=diaFijo(t,now,-1), nx=diaFijo(t,now,1);
+  const hecho=logsDe(t).find(r=>r.ts>=lt.date.getTime());
+  const esHoy=diasEntre(lt.date,now)===0;
+  const next=`Next: ${DIAS[nx.date.getDay()]} · ${nx.who}`;
+  if(hecho) return {lt,nx,hecho,pill:["ok","Done"],status:`${pdot(hecho.quien)} <b>${hecho.quien}</b> ${TAREAS[t].corto} ${hace(hecho.ts)}${hecho.quien!==lt.who?` (covered for ${lt.who})`:""}.`,next};
+  if(esHoy) return {lt,nx,pill:["warn","Due today"],status:`Today it's ${pdot(lt.who)} <b>${lt.who}</b>'s turn.`,next};
+  return {lt,nx,pill:["bad","Pending"],status:`${pdot(lt.who)} <b>${lt.who}</b>'s ${DIAS[lt.date.getDay()]} turn is still pending.`,next};
+}
+function estadoFijo(t){const s=_estadoFijo(t), R=replayFijo(t), notas=[];
+  if(!s.hecho&&s.lt.settle) notas.push(`It's ${s.lt.who}'s turn instead of ${s.lt.base}'s, because she owed her one.`);
+  GENTE.forEach(a=>GENTE.forEach(b=>{const n=R.debt[a][b];if(n>0)notas.push(`${pdot(a)} ${a} owes ${b} ${n} turn${n>1?"s":""}: she will do ${b}'s next day.`)}));
+  if(notas.length) s.status+=`<div class="meta">${notas.join("<br>")}</div>`;
+  s.status+=alertaHtml(R.racha,R.por,"turns in a row not done");
+  return s}
+function alertaHtml(racha,por,txt){return GENTE.filter(p=>racha[p]>=2).map(p=>`<div class="alerta"><b>Heads-up:</b> ${p} has ${racha[p]} ${txt}. Done by ${[...new Set(por[p])].join(" and ")}.</div>`).join("")}
+function alertasCasa(){const L=[];
+  ["basura","trapos","barrer"].forEach(t=>{const e=estadoTurno(t);GENTE.forEach(p=>{if(e.racha[p]>=2)L.push({p,n:e.racha[p],por:e.por[p],t})})});
+  return L}
+function renderAlertas(){$("#alertas").innerHTML=alertasCasa().map(a=>`<div class="alerta"><b>Heads-up:</b> ${a.p} has ${a.n} turns in a row of ${a.t==="barrer"?"sweeping and furniture":TAREAS[a.t].t.toLowerCase()} not done; ${[...new Set(a.por)].join(" and ")} did them. It's still her turn.</div>`).join("")}
+function fiestasPendientes(){return logsDe("fiesta").filter(r=>!r.limpio)}
+
+// Turns in order Ana → Bea → Cami: the next turn goes to whoever follows the last holder
+// From 27 Oct: if someone else does it, the owner keeps the turn and the helper skips her next one.
+const CUT_TURNO=1793055600000;
+function estadoTurno(t){
+  const u=ultimo(t), T=TAREAS[t], key=turnoKey(t);
+  // Furniture follows the sweeping turn. A "reinicio-<tarea>" record with "empieza" sets who goes first from that moment.
+  const reset=registros.filter(r=>r.tarea==="reinicio-"+key&&GENTE.includes(r.empieza)).sort((a,b)=>b.ts-a.ts)[0];
+  const ev=registros.filter(r=>(!reset||r.ts>reset.ts)&&((r.tarea===key&&GENTE.includes(r.quien))||(r.tarea==="turno-"+key&&!r.slot&&GENTE.includes(r.asigna)))).slice().sort((a,b)=>a.ts-b.ts);
+  const credito={Ana:0,Bea:0,Cami:0}, racha={Ana:0,Bea:0,Cami:0}, por={Ana:[],Bea:[],Cami:[]};
+  const sig=p=>GENTE[(GENTE.indexOf(p)+1)%3];
+  const first=ev.find(r=>r.tarea===t);
+  let toca=reset?reset.empieza:first&&GENTE.includes(first.turno)?first.turno:GENTE[0], ov=null, last=null;
+  const avanzar=()=>{toca=sig(toca);for(let k=0;k<3&&credito[toca]>0;k++){credito[toca]--;toca=sig(toca)}};
+  for(const r of ev){
+    if(r.tarea!==key){if(r.ts<CUT_TURNO)toca=r.asigna;else ov=r;continue}
+    if(last&&last.quien===r.quien&&r.ts-last.ts<30*60000){ov=null;continue} last=r;
+    if(r.ts<CUT_TURNO){toca=sig(GENTE.includes(r.turno)?r.turno:r.quien);continue}
+    if(r.quien===toca){racha[toca]=0;por[toca]=[];avanzar()}
+    else{credito[r.quien]++;if(!(ov&&ov.quien===toca)){racha[toca]++;por[toca].push(r.quien)}}
+    ov=null;
+  }
+  const loHace=ov&&ov.asigna!==toca?ov.asigna:null;
+  const d=u?diasEntre(u.ts,new Date()):null;
+  let pill=["neutral",toca+"'s turn"];
+  if(T.cada&&T.tol!=null){const tol=T.tol;
+    pill=d===null?["warn","Due now"]:d<T.cada?["ok",d===0?"Done today":`${d} ${d===1?"day":"days"} ago`]:d===T.cada?["warn","Due today"]:d<=T.cada+tol?["warn","Last day of margin"]:["bad",`${d-T.cada-tol} ${d-T.cada-tol===1?"day":"days"} late`]}
+  else if(T.cada){pill=d===null?["neutral","No data"]:d>=T.cada?["warn","Due now"]:["ok",d===0?"Today":`${d} ${d===1?"day":"days"} ago`]}
+  if(racha[toca]>=2) pill=["bad",`${toca}: ${racha[toca]} missed`];
+  const ultimaTxt=u?`Last time: ${u.quien} ${hace(u.ts)}${u.cubre?" (out of turn)":""}`:"No records yet";
+  const adel=GENTE.filter(p=>credito[p]>0);
+  const adelTxt=adel.length?`<div class="meta">${adel.map(p=>`${pdot(p)} ${p} is ${credito[p]} turn${credito[p]>1?"s":""} ahead: she skips her next one.`).join("<br>")}</div>`:"";
+  const status=`It's ${pdot(toca)} <b>${toca}</b>'s turn.${loHace?` This time ${loHace} does it.`:""}${adelTxt}${alertaHtml(racha,por,"turns in a row not done")}`;
+  return {toca,loHace,u,d,pill,credito,racha,por,status,next:ultimaTxt};
+}
+
+function renderWho(){
+  $("#who").innerHTML=GENTE.map(p=>`<button class="chip p-${p}" aria-pressed="${p===me}" data-me="${p}">${pdot(p)}${p}</button>`).join("");
+}
+function renderToday(){
+  const now=new Date(), b=estadoTurno("basura"), br=estadoTurno("barrer"), fp=fiestasPendientes();
+  const fecha="Trash turn · rotating, no fixed day";
+  const big=`Trash: it's ${b.toca}'s turn`;
+  const bTxt=`Sweeping and furniture: ${br.toca}'s turn (${br.pill[1].toLowerCase()}).`;
+  const sub=(b.u?`Last taken out by ${b.u.quien} ${hace(b.u.ts)}. `:"")+bTxt+(fp.length?` Party cleanup pending: ${[...new Set(fp.map(f=>f.quien))].join(", ")}.`:"");
+  $("#today").innerHTML=`<div><div class="eyebrow" style="color:inherit;opacity:.8">${esc(fecha)}</div><div class="big">${esc(big)}</div><div class="sub">${esc(sub)}</div></div><div class="row"><button class="btn" data-open="basura">Log trash</button><button class="btn" data-swap="basura">Swap turn</button></div>`;
+}
+function renderTasks(){
+  const now=new Date(), wk=lunes(now).getTime();
+  $("#week").textContent="Week of "+lunes(now).toLocaleDateString("en-GB",{day:"numeric",month:"long"});
+  const _c=ORDEN.map(t=>{
+    const T=TAREAS[t]; let pill, body="", meta="";
+    if(T.tipo==="turno"){
+      const s=estadoTurno(t); pill=s.pill; body=`<div class="status">${s.status}</div><div class="meta">Order: Ana → Bea → Cami${T.cada?` · every ${T.cada} days${T.tol?` (+${T.tol} margin)`:""}`:" · no fixed day"}${T.cada&&T.tol!=null&&s.u?` · due ${fcorta(s.u.ts+T.cada*864e5)}${T.tol?`, at the latest ${fcorta(s.u.ts+(T.cada+T.tol)*864e5)}`:""}`:""}${t==="muebles"?" · goes with sweeping":t==="barrer"?" · includes furniture":""}</div>`+subsHtml(t,s); meta=s.next;
+      return `<article class="card"><div class="card-top"><h3>${T.t}</h3><span class="pill ${pill[0]}">${pill[1]}</span></div>${body}<div class="row" style="justify-content:space-between"><span class="meta">${meta}</span><div class="row"><button class="btn" data-swap="${t}">Swap turn</button><button class="btn" data-open="${t}">Done</button></div></div></article>`;
+    } else if(T.tipo==="fijo"){
+      const s=estadoFijo(t); pill=s.pill; body=`<div class="status">${s.status}</div><div class="meta">${Object.entries(FIJOS[t]).map(([d,p])=>`${ABR[d]} ${p}`).join(" · ")}${t==="muebles"?" · goes with sweeping":t==="barrer"?" · includes furniture":""}</div>`+subsHtml(t,s); meta=s.next;
+      return `<article class="card"><div class="card-top"><h3>${T.t}</h3><span class="pill ${pill[0]}">${pill[1]}</span></div>${body}<div class="row" style="justify-content:space-between"><span class="meta">${meta}</span><div class="row"><button class="btn" data-swap="${t}">Swap turn</button><button class="btn" data-open="${t}">Done</button></div></div></article>`;
+    } else if(T.tipo==="fiesta"){
+      const fp=fiestasPendientes();
+      if(fp.length){pill=["warn","Cleanup pending"];
+        body=`<ul class="list">${fp.map(f=>`<li>${pdot(f.quien)}<span class="grow"><b>${f.quien}</b> ${new Date(f.ts).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}${f.nota?` · ${esc(f.nota)}`:""}</span><button class="btn" data-limpio="${f.id}">I cleaned</button></li>`).join("")}</ul>`}
+      else{const u=ultimo(t);pill=["ok","All clean"];body=`<div class="status">${u?`Last one: ${u.quien}, ${new Date(u.ts).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}.`:"No parties logged."}</div>`}
+      meta="Whoever hosts cleans up after";
+      return `<article class="card"><div class="card-top"><h3>${T.t}</h3><span class="pill ${pill[0]}">${pill[1]}</span></div>${body}<div class="row" style="justify-content:space-between"><span class="meta">${meta}</span><button class="btn" data-open="${t}">Announce a party</button></div></article>`;
+    } else if(T.tipo==="periodo"){
+      const u=ultimo(t), d=u?diasEntre(u.ts,now):null;
+      pill=d===null?["neutral","No data"]:d>=T.cada?["bad","Due now"]:d>=T.cada-3?["warn",`${T.cada-d} days left`]:["ok","Up to date"];
+      body=`<div class="status">${u?`${pdot(u.quien)} <b>${u.quien}</b> ${T.corto} ${hace(u.ts)}.`:"No records yet. Whoever can, whenever suits them."}</div>`;
+      meta=`Every ${T.cada} days`+(u&&d<T.cada?` · next on ${new Date(u.ts+T.cada*864e5).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}`:"");
+    } else if(T.tipo==="semanal"){
+      const h=logsDe(t).find(r=>r.ts>=wk);
+      if(h){pill=["ok","Done"];body=`<div class="status">${pdot(h.quien)} <b>${h.quien}</b> ${T.corto} ${hace(h.ts)}.</div>`}
+      else{pill=["warn","This week"];body=`<div class="status">Whoever can, whenever suits them.</div>`}
+      meta="Once a week";
+    } else if(T.tipo==="cada"){
+      const hechas=GENTE.filter(p=>logsDe(t).some(r=>r.quien===p&&r.ts>=wk));
+      pill=hechas.length===3?["ok","3 of 3"]:["neutral",hechas.length+" of 3"];
+      body=`<div class="minis">${GENTE.map(p=>`<span class="mini ${hechas.includes(p)?"done":""}">${pdot(p)}${p}${hechas.includes(p)?" ✓":""}</span>`).join("")}</div>`;
+      meta="Each person her own, once a week";
+    } else if(T.tipo==="cuenta"){
+      const mes=new Date(now.getFullYear(),now.getMonth(),1).getTime();
+      const c=GENTE.map(p=>[p,logsDe(t).filter(r=>r.quien===p&&r.ts>=mes).length]); const max=Math.max(1,...c.map(x=>x[1]));
+      pill=["neutral","This month"];
+      body=`<div class="bars">${c.map(([p,n])=>`<div class="bar p-${p}"><span>${p}</span><i style="width:${n/max*100}%"></i><span class="num">${n}</span></div>`).join("")}</div>`;
+      meta="No turns. Shows whether it is shared fairly.";
+    } else {
+      const u=ultimo(t); const d=u?diasEntre(u.ts,now):null;
+      pill=d===null?["neutral","No data"]:d>=28?["bad",`${d} days`]:d>=21?["warn",`${d} days`]:["ok",`${d} days`];
+      body=`<div class="status">${u?`Last visit: <b>${new Date(u.ts).toLocaleDateString("en-GB",{day:"numeric",month:"long"})}</b>.`:"No visits logged yet."}</div>`;
+      meta="Call them every 3 or 4 weeks"; body+=didisHtml();
+      const pv=didisVigente(); if(pv&&!pv.llamadas) pill=["warn","Need to call"];
+      return `<article class="card"><div class="card-top"><h3>${T.t}</h3><span class="pill ${pill[0]}">${pill[1]}</span></div>${body}<div class="row" style="justify-content:space-between"><span class="meta">${meta}</span><div class="row"><button class="btn" data-didis="1">${pv?"Edit appointment":"Schedule a visit"}</button><button class="btn" data-open="${t}">They came</button></div></div></article>`;
+    }
+    return `<article class="card"><div class="card-top"><h3>${T.t}</h3><span class="pill ${pill[0]}">${pill[1]}</span></div>${body}<div class="row" style="justify-content:space-between"><span class="meta">${meta}</span><button class="btn" data-open="${t}">Done</button></div></article>`;
+  });
+  $("#tasks").innerHTML=ORDEN.map((t,k)=>EN_LISTA(t)?"":_c[k]).join("");
+  $("#tasksList").innerHTML=ORDEN.map((t,k)=>EN_LISTA(t)?_c[k]:"").join("");
+}
+function renderFaltan(){
+  const open=faltan.filter(f=>!f.comprado);
+  $("#faltanCount").textContent=open.length?open.length+(open.length===1?" item":" items"):"Nothing";
+  $("#faltanList").innerHTML=open.length?open.map(f=>`<li><button class="check" data-comprar="${f.id}" aria-label="Mark ${esc(f.item)} as bought"></button><span class="grow">${esc(f.item)}</span><span class="meta muted" style="font-size:12.5px">${pdot(f.quien)} ${hace(f.ts)}</span></li>`).join(""):`<li class="empty">Nothing missing. When something runs out, add it here.</li>`;
+}
+function avToca(){const u=averias.slice().sort((a,b)=>b.ts-a.ts)[0];return u&&GENTE.includes(u.resp)?GENTE[(GENTE.indexOf(u.resp)+1)%3]:GENTE[0]}
+function renderAverias(){
+  const ab=averias.filter(a=>a.estado!=="arreglado").sort((a,b)=>(b.urgente?1:0)-(a.urgente?1:0)||a.ts-b.ts);
+  const ok=averias.filter(a=>a.estado==="arreglado").sort((a,b)=>(b.fixedTs||0)-(a.fixedTs||0)).slice(0,3);
+  $("#avCount").textContent=ab.length?`${ab.length} open`:"All good";
+  const t=avToca();
+  $("#avResp").innerHTML=`The next breakdown is handled by ${pdot(t)} <b>${t}</b>. Order: Ana → Bea → Cami.`;
+  const item=a=>{const e=AV_EST[a.estado]||AV_EST.pendiente;
+    const acc=a.estado==="pendiente"?`<button class="btn" data-av="${a.id}|avisado">I told the landlord</button><button class="btn" data-av="${a.id}|arreglado">Fixed</button>`:a.estado==="avisado"?`<button class="btn" data-av="${a.id}|arreglado">Fixed</button>`:"";
+    return `<li style="flex-wrap:wrap">${pdot(a.resp)}<span class="grow"><b>${esc(a.que)}</b>${a.urgente?' <span class="pill bad">Urgent</span>':""}<br><span class="meta">${esc(a.donde||"")} · handled by ${a.resp} · reported by ${a.quien} ${hace(a.ts)}${a.estado==="arreglado"&&a.fixedTs?` · fixed ${hace(a.fixedTs)}`:""}</span></span><span class="pill ${e[0]}">${e[1]}</span><div class="row" style="width:100%;justify-content:flex-end">${acc}<button class="x ${armed===a.id?"arm":""}" data-delav="${a.id}" aria-label="Delete">${armed===a.id?"Delete?":"✕"}</button></div></li>`};
+  $("#avList").innerHTML=(ab.length?ab.map(item).join(""):`<li class="empty">Nothing is broken right now.</li>`)+(ok.length?`<li class="eyebrow" style="border:0;padding-top:12px">Recently fixed</li>`+ok.map(item).join(""):"");
+}
+function openAveria(){
+  if(!me){toast("Pick your name at the top first");return}
+  const t=avToca();
+  $("#sheetRoot").innerHTML=`<div class="sheet-bg" data-close><form class="sheet" id="avForm" role="dialog" aria-modal="true" aria-label="Report something broken" style="flex-wrap:nowrap">
+    <div class="eyebrow">Report something broken · reported by ${me}</div>
+    <div class="big">${t} handles this one</div>
+    <input type="text" id="avQue" maxlength="80" placeholder="What's wrong? (leaking sink…)" aria-label="What's wrong" required>
+    <div class="row"><label class="muted" for="avDonde" style="flex:1">Where?</label><select id="avDonde">${LUGARES.map(l=>`<option>${l}</option>`).join("")}</select></div>
+    <label class="row" for="avUrg" style="justify-content:space-between"><span class="muted">It's urgent</span><input type="checkbox" id="avUrg"></label>
+    <div class="status muted">Handling it means telling the landlord or whoever fixes it, and marking it here once it's solved.</div>
+    <button class="btn primary" type="submit">Report</button>
+    <button class="btn" type="button" data-close>Cancel</button></form></div>`;
+  $("#avForm").addEventListener("submit",async e=>{e.preventDefault();const q=$("#avQue").value.trim();if(!q){toast("Write what's wrong");return}
+    const rec={que:q,donde:$("#avDonde").value,urgente:$("#avUrg").checked,quien:me,resp:avToca(),estado:"pendiente",ts:Date.now()};
+    closeSheet();
+    if(demo){averias.unshift({id:"a"+Date.now(),...rec});render();toast(`Reported. ${rec.resp} handles it`);return}
+    try{await db.collection("averias").add(rec);toast(`Reported. ${rec.resp} handles it`)}catch(err){if(err&&err.code==="invalid_argument")avisoAcceso(MSG_ESCRIBIR);toast("Couldn't report it.")}});
+}
+async function avEstado(id,est){const a=averias.find(x=>x.id===id);if(!a)return;
+  const patch={estado:est}; if(est==="arreglado"){patch.fixedTs=Date.now();patch.fixedBy=me||""}
+  if(demo){Object.assign(a,patch);render();return}
+  try{await db.collection("averias").doc(id).update(patch);toast(est==="arreglado"?"Marked as fixed ✓":"Marked as notified")}catch(_){toast("Couldn't update.")}}
+const fcorta=ts=>new Date(ts).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
+const finVis=v=>v.desde+(v.noches||0)*864e5;
+function frecuentes(){const lim=Date.now()-30*864e5, m={};
+  visitas.filter(v=>v.desde>=lim&&v.invitado).forEach(v=>{const k=v.invitado.trim().toLowerCase();m[k]=m[k]||{n:v.invitado.trim(),noches:0,host:v.quien};m[k].noches+=v.noches||0});
+  return Object.values(m).filter(x=>x.noches>=LIMITE_NOCHES)}
+function renderVisitas(){
+  const hoy0=sod(new Date()).getTime();
+  const act=visitas.filter(v=>finVis(v)>=hoy0).sort((a,b)=>a.desde-b.desde);
+  const pas=visitas.filter(v=>finVis(v)<hoy0).sort((a,b)=>b.desde-a.desde).slice(0,8);
+  const enCasa=act.filter(v=>v.desde<=Date.now()).length;
+  $("#visCount").textContent=enCasa?`${enCasa} here now`:act.length?`${act.length} upcoming`:"Nobody";
+  const fr=frecuentes();
+  $("#visAviso").innerHTML=fr.map(x=>`<div class="banner"><b>${esc(x.n)}</b> has stayed ${x.noches} nights in the last 30 days. Under the house rules, frequent stays are discussed as a group.</div>`).join("");
+  const item=v=>{const d0=sod(v.desde).getTime(), fin=finVis(v);
+    const est=d0>hoy0?["neutral","Arrives "+fcorta(v.desde)]:fin>=hoy0?["warn","Here now"]:null;
+    const noc=v.noches?`${v.noches} night${v.noches>1?"s":""}`+(v.noches?` · until ${fcorta(fin)}`:""):"Day visit";
+    return `<li>${pdot(v.quien)}<span class="grow"><b>${esc(v.invitado||"Guest")}</b> <span class="muted">· ${esc(v.genero||"")} · ${esc(v.tipo||"")}</span><br><span class="meta">Host: ${v.quien} · ${fcorta(v.desde)} · ${noc}${v.nota?` · ${esc(v.nota)}`:""}</span></span>${est?`<span class="pill ${est[0]}">${est[1]}</span>`:""}<button class="x ${armed===v.id?"arm":""}" data-delv="${v.id}">${armed===v.id?"Delete?":"✕"}</button></li>`};
+  $("#visAct").innerHTML=act.length?act.map(item).join(""):`<li class="empty">Nobody is visiting and no visits announced.</li>`;
+  $("#visPas").innerHTML=pas.length?pas.map(item).join(""):`<li class="empty">No visits logged yet.</li>`;
+}
+function openVisita(){
+  const h=new Date(), hoyStr=`${h.getFullYear()}-${String(h.getMonth()+1).padStart(2,"0")}-${String(h.getDate()).padStart(2,"0")}`;
+  $("#sheetRoot").innerHTML=`<div class="sheet-bg" data-close><form class="sheet" id="visForm" role="dialog" aria-modal="true" aria-label="Announce a visit" style="flex-wrap:nowrap">
+    <div class="eyebrow">Announce a visit</div>
+    <div class="big">${me?`Host: ${me}`:"Pick your name"}</div>
+    <div class="who">${GENTE.map(p=>`<button type="button" class="chip p-${p}" aria-pressed="${p===me}" data-mev="${p}">${pdot(p)}${p}</button>`).join("")}</div>
+    <input type="text" id="vNombre" maxlength="40" placeholder="Name (optional)" aria-label="Guest name">
+    <div class="row"><label class="muted" for="vGenero" style="flex:1">Gender</label><select id="vGenero">${GENEROS.map(g=>`<option>${g}</option>`).join("")}</select></div>
+    <div class="row"><label class="muted" for="vTipo" style="flex:1">Type</label><select id="vTipo">${TIPOS.map(g=>`<option>${g}</option>`).join("")}</select></div>
+    <div class="row"><label class="muted" for="vDesde" style="flex:1">What day do they arrive?</label><input type="date" id="vDesde" value="${hoyStr}"></div>
+    <div class="row"><label class="muted" for="vNoches" style="flex:1">Nights staying (0 = day visit)</label><input type="number" id="vNoches" min="0" max="60" value="0" inputmode="numeric" style="width:80px"></div>
+    <input type="text" id="vNota" maxlength="80" placeholder="Optional note" aria-label="Note">
+    <button class="btn primary" type="submit" ${me?"":"disabled"} id="vGuardar">Tell the group</button>
+    <button class="btn" type="button" data-close>Cancel</button></form></div>`;
+  $("#visForm").addEventListener("submit",guardarVisita);
+}
+async function guardarVisita(e){e.preventDefault(); if(!me)return;
+  const [y,m,d]=$("#vDesde").value.split("-").map(Number); if(!y){toast("Pick the date");return}
+  const desde=new Date(y,m-1,d,12).getTime();
+  const rec={quien:me,invitado:$("#vNombre").value.trim(),genero:$("#vGenero").value,tipo:$("#vTipo").value,desde,noches:Math.max(0,Math.min(60,parseInt($("#vNoches").value)||0)),nota:$("#vNota").value.trim(),ts:Date.now()};
+  closeSheet();
+  if(demo){visitas.unshift({id:"v"+Date.now(),...rec});render();toast("Visit announced (preview)");return}
+  try{await db.collection("visitas").add(rec);toast("Visit announced ✓")}catch(_){toast("Couldn't save the visit.")}}
+function renderHist(){
+  const h=registros.slice(0,15);
+  const txt=r=>{if(String(r.tarea).startsWith("reinicio-"))return r.empieza?`gave the next sweeping and furniture turn to ${esc(r.empieza)}`:"reset the sweeping and furniture turns";if(String(r.tarea).startsWith("deuda-"))return `noted that ${esc(r.debe)} owes ${esc(r.a)} a sweeping and furniture turn`;if(String(r.tarea).startsWith("turno-")){const k=r.tarea.slice(6);return `passed the ${TAREAS[k]?TAREAS[k].t.toLowerCase():esc(k)} turn${r.slot?` for ${DIAS[new Date(r.slot).getDay()]} ${new Date(r.slot).getDate()}`:""} to ${esc(r.asigna||"")}`}return TAREAS[r.tarea]?TAREAS[r.tarea].corto:esc(r.tarea)};
+  $("#hist").innerHTML=h.length?h.map(r=>`<li>${pdot(r.quien)}<span class="grow"><b>${r.quien}</b> ${txt(r)}${r.cubre?` <span class="muted">${TAREAS[r.tarea]&&TAREAS[r.tarea].tipo==="turno"?`(out of turn · it was still ${r.cubre}'s turn)`:`(covered for ${r.cubre})`}</span>`:""}</span><span class="muted" style="font-size:12.5px">${hace(r.ts)}</span><button class="x ${armed===r.id?"arm":""}" data-del="${r.id}">${armed===r.id?"Delete?":"✕"}</button></li>`).join(""):`<li class="empty">No records yet. Tap a tag with your phone or press "Done" on a task.</li>`;
+}
+function renderLinks(){
+  const base=BASE_URL||"(board link)";
+  const items=[...ORDEN.map(t=>[t,TAREAS[t].t]),["faltan","Open the ran-out list"],["visita","Announce a visit"],["averia","Report something broken"]];
+  $("#links").innerHTML=items.map(([k,l])=>`<li><span class="grow">${esc(l)}<br><code>${esc(base)}#${k}</code></span>${BASE_URL?`<button class="btn" data-copy="${esc(BASE_URL+"#"+k)}">Copy</button>`:""}</li>`).join("");
+}
+let vista="board", periodo="mes";
+try{if(localStorage.getItem("casa-vista")==="stats")vista="stats"}catch(_){}
+const PER={mes:"This month",d30:"30 days",m3:"3 months",todo:"All"};
+function desde(){const n=new Date();if(periodo==="mes")return new Date(n.getFullYear(),n.getMonth(),1).getTime();if(periodo==="d30")return Date.now()-30*864e5;if(periodo==="m3")return Date.now()-90*864e5;return 0}
+const esTarea=r=>TAREAS[r.tarea]&&!["fiesta","didis"].includes(r.tarea);
+function renderStats(){
+  if(vista!=="stats")return;
+  const s0=desde(), R=registros.filter(r=>r.ts>=s0&&esTarea(r));
+  $("#periodos").innerHTML=Object.entries(PER).map(([k,l])=>`<button class="tab" data-per="${k}" aria-selected="${k===periodo}">${l}</button>`).join("");
+  const fiestas=registros.filter(r=>r.tarea==="fiesta"&&r.ts>=s0).length;
+  const bas=logsDe("basura").slice(0,11); let ritmo="–";
+  if(bas.length>1){ritmo=((bas[0].ts-bas[bas.length-1].ts)/864e5/(bas.length-1)).toFixed(1)}
+  $("#kpis").innerHTML=[[R.length,"tasks done"],[R.filter(r=>r.cubre).length,"times someone covered a turn"],[ritmo==="–"?"–":ritmo+" d","between trash runs (average)"],[fiestas,fiestas===1?"party":"parties"]]
+    .map(([v,l])=>`<div class="kpi"><strong>${v}</strong><span>${l}</span></div>`).join("");
+
+  // Who does what
+  const filas=ORDEN.filter(t=>!["fiesta","didis"].includes(t));
+  const cnt=(t,p)=>R.filter(r=>r.tarea===t&&r.quien===p).length;
+  const mx=Math.max(1,...filas.flatMap(t=>GENTE.map(p=>cnt(t,p))));
+  const cell=n=>`<span class="heat" style="background:color-mix(in srgb,var(--accent) ${n?Math.round(12+48*n/mx):0}%,transparent)">${n||"·"}</span>`;
+  $("#heat").innerHTML=`<table class="m"><thead><tr><th>Task</th>${GENTE.map(p=>`<th>${pdot(p)} ${p}</th>`).join("")}<th>Total</th></tr></thead><tbody>${
+    filas.map(t=>`<tr><th scope="row">${TAREAS[t].t}</th>${GENTE.map(p=>`<td>${cell(cnt(t,p))}</td>`).join("")}<td>${R.filter(r=>r.tarea===t).length}</td></tr>`).join("")
+  }<tr><th scope="row"><b>Total</b></th>${GENTE.map(p=>`<td><b>${R.filter(r=>r.quien===p).length}</b></td>`).join("")}<td><b>${R.length}</b></td></tr></tbody></table>`;
+
+  // Turns
+  const TT=["basura","barrer","muebles","trapos"], RT=R.filter(r=>TT.includes(r.tarea));
+  $("#turnosTbl").innerHTML=`<table class="m"><thead><tr><th></th><th>On her turn</th><th>Covered someone</th><th>Got covered</th><th>Passed her turn</th><th>Breakdowns handled</th></tr></thead><tbody>${
+    GENTE.map(p=>`<tr><th scope="row">${pdot(p)} ${p}</th><td>${RT.filter(r=>r.quien===p&&!r.cubre).length}</td><td>${RT.filter(r=>r.quien===p&&r.cubre).length}</td><td>${RT.filter(r=>r.cubre===p).length}</td><td>${registros.filter(r=>String(r.tarea).startsWith("turno-")&&r.ts>=s0&&r.quien===p).length}</td><td>${averias.filter(a=>a.resp===p&&a.ts>=s0).length}</td></tr>`).join("")
+  }</tbody></table>`;
+
+
+  // Visits
+  const V=visitas.filter(v=>v.desde>=s0);
+  $("#visTbl").innerHTML=`<table class="m"><thead><tr><th>Host</th><th>Visits</th><th>Nights</th>${GENEROS.map(g=>`<th>${g}</th>`).join("")}</tr></thead><tbody>${
+    GENTE.map(p=>{const Vp=V.filter(v=>v.quien===p);return `<tr><th scope="row">${pdot(p)} ${p}</th><td>${Vp.length}</td><td>${Vp.reduce((a,v)=>a+(v.noches||0),0)}</td>${GENEROS.map(g=>`<td>${Vp.filter(v=>v.genero===g).length}</td>`).join("")}</tr>`}).join("")
+  }<tr><th scope="row"><b>Total</b></th><td><b>${V.length}</b></td><td><b>${V.reduce((a,v)=>a+(v.noches||0),0)}</b></td>${GENEROS.map(g=>`<td><b>${V.filter(v=>v.genero===g).length}</b></td>`).join("")}</tr></tbody></table>`;
+  $("#visTipoTbl").innerHTML=`<table class="m"><thead><tr><th>Visit type</th>${GENTE.map(p=>`<th>${p}</th>`).join("")}<th>Total</th></tr></thead><tbody>${
+    TIPOS.map(t=>`<tr><th scope="row">${t}</th>${GENTE.map(p=>`<td>${V.filter(v=>v.tipo===t&&v.quien===p).length||"·"}</td>`).join("")}<td>${V.filter(v=>v.tipo===t).length}</td></tr>`).join("")}</tbody></table>`;
+
+  // Weekly activity (stacked by person)
+  const L0=lunes(new Date()).getTime(), W=[];
+  for(let i=7;i>=0;i--){const a=L0-i*7*864e5,b=a+7*864e5;W.push({a,c:GENTE.map(p=>registros.filter(r=>esTarea(r)&&r.quien===p&&r.ts>=a&&r.ts<b).length)})}
+  const maxW=Math.max(4,...W.map(w=>w.c.reduce((x,y)=>x+y,0)));
+  const step=Math.ceil(maxW/4), top=step*4;
+  const VW=640,VH=220,pl=30,pb=26,pt=12,ch=VH-pb-pt,cw=(VW-pl)/8,bw=Math.min(40,cw*.56);
+  const y=v=>pt+ch-v/top*ch;
+  let svg=`<svg viewBox="0 0 ${VW} ${VH}" role="img" aria-label="Tasks by week and person">`;
+  for(let k=0;k<=4;k++){const v=k*step;svg+=`<line class="gl" x1="${pl}" x2="${VW}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`}
+  W.forEach((w,i)=>{const cx=pl+cw*i+cw/2, x=cx-bw/2; let acc=0; const tot=w.c.reduce((a,b)=>a+b,0);
+    const d=new Date(w.a), lab=d.toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+    const tip=`Week of ${lab}: ${GENTE.map((p,j)=>`${p} ${w.c[j]}`).join(" · ")}`;
+    svg+=`<g class="wk" data-tip="${esc(tip)}"><rect class="hit" x="${pl+cw*i+2}" y="${pt}" width="${cw-4}" height="${ch}" rx="6"/>`;
+    w.c.forEach((n,j)=>{if(!n)return;const h=n/top*ch;const yy=y(acc+n);const gap=acc>0?2:0;
+      svg+=`<rect x="${x}" y="${yy}" width="${bw}" height="${Math.max(1,h-gap)}" rx="3" style="fill:var(--p-${GENTE[j].toLowerCase()})"/>`;acc+=n});
+    if(tot) svg+=`<text x="${cx}" y="${y(tot)-5}" text-anchor="middle" style="fill:var(--ink)">${tot}</text>`;
+    svg+=`<text x="${cx}" y="${VH-8}" text-anchor="middle">${lab}</text></g>`});
+  svg+=`</svg><div class="tip" id="tip" hidden></div>`;
+  $("#weekChart").innerHTML=svg;
+  $("#weekLegend").innerHTML=GENTE.map(p=>`<span>${pdot(p)}${p}</span>`).join("");
+}
+function render(){
+  $("#viewBoard").hidden=vista!=="board"; $("#viewStats").hidden=vista!=="stats";
+  $("#tab-board").setAttribute("aria-selected",vista==="board"); $("#tab-stats").setAttribute("aria-selected",vista==="stats");
+  renderWho();renderAlertas();renderToday();renderTasks();renderFaltan();renderAverias();renderVisitas();renderHist();renderLinks();renderStats()}
+document.addEventListener("pointermove",e=>{const tip=$("#tip");if(!tip)return;const g=e.target.closest&&e.target.closest("g.wk");
+  if(!g){tip.hidden=true;return} const box=$("#weekChart").getBoundingClientRect();
+  tip.textContent=g.dataset.tip; tip.hidden=false;
+  tip.style.left=Math.min(Math.max(e.clientX-box.left,90),box.width-90)+"px"; tip.style.top=(e.clientY-box.top)+"px"});
+
+function toast(msg){const r=$("#toastRoot");r.innerHTML=`<div class="toast" role="status">${esc(msg)}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>r.innerHTML="",2600)}
+function closeSheet(){$("#sheetRoot").innerHTML="";try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}
+function openSheet(t){
+  const T=TAREAS[t]; if(!T)return;
+  const r=$("#sheetRoot");
+  const pick=`<div><div class="eyebrow" style="margin-bottom:6px">Who are you?</div><div class="who">${GENTE.map(p=>`<button class="chip p-${p}" aria-pressed="${p===me}" data-me="${p}">${pdot(p)}${p}</button>`).join("")}</div></div>`;
+  const prevFecha=$("#fecha")?.value;
+  const hoy=new Date(), hoyStr=`${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,"0")}-${String(hoy.getDate()).padStart(2,"0")}`;
+  let extra="";
+  if(T.tipo==="turno"){const s=estadoTurno(t); if(me&&me!==s.toca) extra=`<div class="status muted">It's ${s.toca}'s turn and it will stay hers. You will skip your next turn.</div>`;}
+  if(T.tipo==="fijo"){const s=estadoFijo(t); if(me&&!s.hecho&&me!==s.lt.who) extra=`<div class="status muted">It was ${s.lt.who}'s turn. She will owe you one and do your next day.</div>`;}
+  const esFiesta=T.tipo==="fiesta", prevNota=$("#nota")?.value||"";
+  if(esFiesta) extra+=`<div class="status muted">It stays as your pending cleanup until you press "I cleaned".</div><input type="text" id="nota" maxlength="60" placeholder="Optional note (dinner, birthday, ~10 people…)" value="${esc(prevNota)}" aria-label="Nota">`;
+  extra+=`<label class="row" for="fecha" style="justify-content:space-between"><span class="muted">${t==="didis"?"What day did they come?":esFiesta?"What day is it?":"When was it?"}</span><input type="date" id="fecha" ${esFiesta?"":`max="${hoyStr}"`} value="${prevFecha||hoyStr}"></label>`;
+  r.innerHTML=`<div class="sheet-bg" data-close><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(T.t)}">
+    <div class="eyebrow">${esc(T.t)}</div>
+    <div class="big">${me?`${esc(me)} ${esc(T.corto)}`:"Pick your name"}</div>
+    ${pick}${extra}
+    <button class="btn primary" id="confirmar" data-hecho="${t}" ${me?"":"disabled"}>Confirm</button>
+    <button class="btn" data-close>Cancel</button></div></div>`;
+}
+
+function openSwap(t){const T=TAREAS[t];
+  if(T.tipo==="fijo"){const f=estadoFijo(t), sl=f.hecho?f.nx:f.lt;
+    $("#sheetRoot").innerHTML=`<div class="sheet-bg" data-close><div class="sheet" role="dialog" aria-modal="true" aria-label="Swap turn">
+      <div class="eyebrow">${esc(T.t)} · ${DIAS[sl.date.getDay()]} ${sl.date.getDate()}</div>
+      <div class="big">${sl.who} has the ${DIAS[sl.date.getDay()]} turn. Who does it?</div>
+      <div class="who">${GENTE.filter(p=>p!==sl.who).map(p=>`<button class="chip p-${p}" data-asigna="${p}" data-tarea="${t}" data-slot="${sl.date.getTime()}">${pdot(p)}${p}</button>`).join("")}</div>
+      <div class="status muted">Only that day changes${FIJOS[t]===FIJOS.barrer?", for sweeping and furniture together":""}. ${sl.who} will owe a turn to whoever does it and do her next day.</div>
+      <button class="btn" data-close>Cancel</button></div></div>`;return}
+  const s=estadoTurno(t);
+  $("#sheetRoot").innerHTML=`<div class="sheet-bg" data-close><div class="sheet" role="dialog" aria-modal="true" aria-label="Swap turn">
+    <div class="eyebrow">${esc(T.t)}</div>
+    <div class="big">It's ${s.toca}'s turn. Who does it this time?</div>
+    <div class="who">${GENTE.filter(p=>p!==s.toca).map(p=>`<button class="chip p-${p}" data-asigna="${p}" data-tarea="${t}">${pdot(p)}${p}</button>`).join("")}</div>
+    <div class="status muted">It stays ${s.toca}'s turn afterwards, and whoever does it skips her next turn.</div>
+    <button class="btn" data-close>Cancel</button></div></div>`}
+async function asignar(t,p,slot){
+  const rec={tarea:"turno-"+turnoKey(t),quien:me||p,asigna:p,ts:Date.now()}; if(slot) rec.slot=Number(slot); closeSheet();
+  if(demo){registros.unshift({id:"s"+Date.now(),...rec});render();toast(`Turn passed to ${p}`);return}
+  try{await db.collection("registros").add(rec);toast(`Turn passed to ${p}`)}catch(_){toast("Couldn't swap the turn.")}}
+async function registrar(t){
+  if(!me)return;
+  let ts=Date.now(); const f=$("#fecha")?.value;
+  if(f){const [y,m,d]=f.split("-").map(Number); const dt=new Date(y,m-1,d); if(diasEntre(dt,new Date())!==0){dt.setHours(12);ts=dt.getTime()}}
+  const rec={tarea:t,quien:me,ts};
+  if(TAREAS[t].tipo==="turno"){const s=estadoTurno(t); rec.turno=s.toca; if(s.toca!==me) rec.cubre=s.toca;}
+  if(TAREAS[t].tipo==="fijo"){const s=estadoFijo(t); if(s.lt.who!==me) rec.cubre=s.lt.who;}
+  if(TAREAS[t].tipo==="fiesta"){rec.limpio=false; const n=$("#nota")?.value.trim(); if(n) rec.nota=n;}
+  closeSheet();
+  if(demo){registros.unshift({id:"d"+Date.now(),...rec});render();toast("Saved (preview)");return}
+  try{await db.collection("registros").add(rec);toast("Saved ✓")}catch(e){{if(e&&e.code==="invalid_argument"){avisoAcceso(MSG_ESCRIBIR);toast("Not saved: you don't have permission to edit.")}else toast("Couldn't save. Try again.")}}
+}
+
+document.addEventListener("click",async e=>{
+  const el=e.target.closest("[data-me],[data-open],[data-hecho],[data-close],[data-comprar],[data-del],[data-copy],[data-limpio],[data-swap],[data-asigna],[data-visita],[data-mev],[data-delv],[data-view],[data-per],[data-sub],[data-averia],[data-av],[data-delav],[data-didis],[data-didisdel]");
+  if(!el)return;
+  if(el.dataset.sub){const [t,slot,k]=el.dataset.sub.split("|");toggleSub(t,slot,k);return}
+  if(el.dataset.averia){openAveria();return}
+  if(el.dataset.av){const [id,est]=el.dataset.av.split("|");avEstado(id,est);return}
+  if(el.dataset.delav){const id=el.dataset.delav;
+    if(armed!==id){armed=id;renderAverias();setTimeout(()=>{if(armed===id){armed=null;renderAverias()}},3500);return}
+    armed=null; if(demo){averias=averias.filter(a=>a.id!==id);render();return}
+    try{await db.collection("averias").doc(id).delete()}catch(_){toast("Couldn't delete.")}return}
+  if(el.dataset.didis){openLimpieza();return}
+  if(el.dataset.didisdel){quitarLimpieza();return}
+  if(el.dataset.visita){openVisita();return}
+  if(el.dataset.mev){me=el.dataset.mev;try{localStorage.setItem("casa-yo",me)}catch(_){}
+    $(".sheet .big").textContent=`Host: ${me}`;document.querySelectorAll("[data-mev]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mev===me));$("#vGuardar").disabled=false;renderWho();return}
+  if(el.dataset.delv){const id=el.dataset.delv;
+    if(armed!==id){armed=id;renderVisitas();setTimeout(()=>{if(armed===id){armed=null;renderVisitas()}},3500);return}
+    armed=null; if(demo){visitas=visitas.filter(v=>v.id!==id);render();return}
+    try{await db.collection("visitas").doc(id).delete()}catch(_){toast("Couldn't delete.")}return}
+  if(el.dataset.swap){openSwap(el.dataset.swap);return}
+  if(el.dataset.asigna){asignar(el.dataset.tarea,el.dataset.asigna,el.dataset.slot);return}
+  if(el.dataset.view){vista=el.dataset.view;try{localStorage.setItem("casa-vista",vista)}catch(_){} render();return}
+  if(el.dataset.per){periodo=el.dataset.per;renderStats();return}
+  if(el.dataset.limpio){const id=el.dataset.limpio;
+    if(demo){const f=registros.find(x=>x.id===id);if(f)f.limpio=true;render();toast("Marked as clean");return}
+    try{await db.collection("registros").doc(id).update({limpio:true,limpioPor:me||"",limpioTs:Date.now()});toast("Marked as clean")}catch(_){toast("Couldn't update.")}return}
+  if(el.dataset.me){me=el.dataset.me;try{localStorage.setItem("casa-yo",me)}catch(_){}
+    const open=$("#confirmar"); if(open){openSheet(open.dataset.hecho)} renderWho(); return}
+  if(el.dataset.open){openSheet(el.dataset.open);return}
+  if(el.dataset.hecho){registrar(el.dataset.hecho);return}
+  if(el.hasAttribute("data-close")){if(e.target===el)closeSheet();return}
+  if(el.dataset.comprar){const id=el.dataset.comprar;
+    if(demo){const f=faltan.find(x=>x.id===id);if(f)f.comprado=true;render();return}
+    try{await db.collection("faltan").doc(id).update({comprado:true,compradoPor:me||"",compradoTs:Date.now()})}catch(_){toast("Couldn't update.")}return}
+  if(el.dataset.del){const id=el.dataset.del;
+    if(armed!==id){armed=id;renderHist();setTimeout(()=>{if(armed===id){armed=null;renderHist()}},3500);return}
+    armed=null;
+    if(demo){registros=registros.filter(r=>r.id!==id);render();return}
+    try{await db.collection("registros").doc(id).delete()}catch(_){toast("Couldn't delete.")}return}
+  if(el.dataset.copy){try{await navigator.clipboard.writeText(el.dataset.copy);toast("Link copied")}catch(_){toast("Press and hold the link to copy it")}}
+});
+$("#faltanForm").addEventListener("submit",async e=>{e.preventDefault();const v=$("#faltanInput").value.trim();if(!v)return;
+  if(!me){toast("Pick your name at the top first");return}
+  const rec={item:v,quien:me,ts:Date.now(),comprado:false};$("#faltanInput").value="";
+  if(demo){faltan.unshift({id:"f"+Date.now(),...rec});render();return}
+  try{await db.collection("faltan").add(rec)}catch(_){toast("Couldn't add it.")}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeSheet()});
+
+function handleHash(){const h=location.hash.slice(1);
+  if(TAREAS[h])openSheet(h);
+  else if(h==="faltan"){document.getElementById("faltanInput").scrollIntoView({block:"center"});setTimeout(()=>$("#faltanInput").focus(),300)}
+  else if(h==="visita"){vista="board";render();openVisita()}
+  else if(h==="averia"){vista="board";render();openAveria()}}
+window.addEventListener("hashchange",handleHash);
+
+function cargarDemo(){
+  demo=true;$("#demo").hidden=false;const D=864e5,now=Date.now();
+  registros=[
+    {tarea:"lavavajillas",quien:"Bea",ts:now-3*36e5},
+    {tarea:"basura",quien:"Cami",turno:"Bea",cubre:"Bea",ts:now-D},
+    {tarea:"basura",quien:"Ana",turno:"Ana",ts:now-3*D},
+    {tarea:"barrer",quien:"Ana",ts:now-2*D},
+    {tarea:"fiesta",quien:"Bea",limpio:false,nota:"Birthday dinner",ts:now-D},
+    {tarea:"trapos",quien:"Bea",turno:"Bea",ts:now-6*D},
+    {tarea:"muebles",quien:"Cami",ts:lunes(new Date()).getTime()+20*36e5},
+    {tarea:"nevera",quien:"Cami",ts:now-D},
+    {tarea:"lavavajillas",quien:"Ana",ts:now-D-5*36e5},
+    {tarea:"lavavajillas",quien:"Bea",ts:now-2*D},
+    {tarea:"didis",quien:"Ana",ts:now-17*D},
+  ].sort((a,b)=>b.ts-a.ts).map((r,i)=>({id:"d"+i,...r}));
+  faltan=[{id:"f1",item:"Toilet paper",quien:"Bea",ts:now-5*36e5},{id:"f2",item:"Trash bags",quien:"Cami",ts:now-D}];
+  averias=[{id:"a1",que:"Kitchen tap is dripping",donde:"Kitchen",urgente:false,quien:"Bea",resp:"Ana",estado:"avisado",ts:now-3*D}];
+  didisProx={llamadas:true,llamo:"Bea",fecha:now+2*D+10*36e5,horario:"10:00–13:00",supervisa:"Ana",ts:now};
+  visitas=[{id:"v1",quien:"Bea",invitado:"Sofía",genero:"Woman",tipo:"Friend",desde:now-D,noches:2,ts:now-2*D},
+    {id:"v2",quien:"Ana",invitado:"",genero:"Man",tipo:"Partner",desde:now+2*D,noches:1,nota:"Arriving late",ts:now},
+    {id:"v3",quien:"Cami",invitado:"Mum",genero:"Woman",tipo:"Family",desde:now-9*D,noches:0,ts:now-10*D}];
+  render();handleHash();
+}
+
+render();handleHash();
+(async()=>{
+  let ns=null; try{ns=await window.claude?.use?.("db")}catch(_){}
+  if(!window.claude){cargarDemo();return}
+  if(!ns){avisoAcceso(MSG_LEER);render();return}
+  try{const u=await claude.use("user");const w=u?await u.can("data.write"):null;if(w===false)avisoAcceso(MSG_ESCRIBIR)}catch(_){}
+  db=ns;
+  const sub=(col,fn,lim)=>db.collection(col).orderBy("ts","desc").limit(lim).onSnapshot(s=>{fn(s.docs.map(d=>({id:d.id,...d.data()})));render()},err=>{if(err&&err.code==="revoked")toast("The board is no longer available.")});
+  sub("registros",v=>registros=v.filter(r=>r.tarea&&GENTE.includes(r.quien)),500);
+  sub("faltan",v=>faltan=v,200);
+  db.collection("subtareas").onSnapshot(sn=>{const o={};sn.docs.forEach(d=>{o[d.id]=d.data()});subs=o;render()},()=>{});
+  db.collection("didis").onSnapshot(sn=>{const d=sn.docs.find(x=>x.id==="proxima");didisProx=d?d.data():null;render()},()=>{});
+  sub("averias",v=>averias=v.filter(a=>GENTE.includes(a.resp)&&a.que),200);
+  sub("visitas",v=>visitas=v.filter(x=>GENTE.includes(x.quien)&&typeof x.desde==="number"),300);
+})();
+setInterval(()=>{if(!$("#confirmar"))render()},60000);
+</script>
+
+</body></html>
